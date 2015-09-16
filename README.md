@@ -1,18 +1,21 @@
 # puush-dumper
 
-## Usage
+## How to install
 
+### Step 0
 ```
 pip2 install BeautifulSoup requests
 ```
 
+### Step 1
 ```
-cp config.example.json config.json
+git clone git@github.com:chinese-soup/puush-dumper.git
+cp puush-dumper/config.example.json puush-dumper/config.json
 ```
-
+### Step 2
 Edit the config.json file accordingly using your favorite text editor.
 
-
+## Usage
 ```
 main.py [-h] [-c CONFIG] [-n] [-p POOL] [-l]
 
