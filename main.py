@@ -87,6 +87,7 @@ if __name__ == "__main__":
 		print "Exiting."
 		sys.exit(0)
 
+
 	paramss = {"page": 1}
 	
 	while(True):
@@ -96,7 +97,8 @@ if __name__ == "__main__":
 		
 		file_links = soup.findAll("a", attrs={"onclick": re.compile("puush_hist_select.*")})
 		for link in file_links:
-			print link["href"]
+			if(args.no_download == True):
+				print link["href"]
 
 		next_page = soup.find("a", text="&raquo;", attrs={ "class": "noborder"}) # inside of the <a> tag for “next page”
 		
