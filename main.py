@@ -77,18 +77,13 @@ if __name__ == "__main__":
 		puush_pools_div = soup.findAll("div",attrs={"id":"puush_pools"}) # this should always return just one, so fuck for
 		puush_pools_links = puush_pools_div[0].findAll("a")
 		
-		pools = {}
+		print "Listing pools:"
 		for i in puush_pools_links:
 			title = i["title"]
 			href = re.sub(r"\/account\/\?pool=([0-9]+)", r"\1", i["href"]) # /account/?pool=number ==> number
-			pools[title] = href
+			print "ID: {0} | Name: {1}".format(href, title)
 		
-		print "Listing pools:"
-
-		for name, href in pools.iteritems():
-			print "ID: {0} | Name: {1}".format(href, name)
-
-		print "\nTo choose a pool to dump use the \"--pool <ID>\" argument."
+		print "To choose a pool to dump use the \"--pool <ID>\" argument."
 		print "Exiting."
 		sys.exit(0)
 
