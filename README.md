@@ -1,7 +1,8 @@
 # puush-dumper
 
 ## Usage
-main.py [-h] [-c CONFIG] [-n] [-p POOL] [-l]
+
+```main.py [-h] [-c CONFIG] [-n] [-p POOL] [-l]
 
 Dump all your files from your puush account.
 
@@ -17,4 +18,4 @@ optional arguments:
                         on puush.me.
   -l, --list-pools      Dump the list of your pools. (aka the puush folder,
                         e.g. Private/Public/Gallery/Custom/...)
-
+```
