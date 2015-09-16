@@ -2,7 +2,8 @@
 
 ## Usage
 
-```main.py [-h] [-c CONFIG] [-n] [-p POOL] [-l]
+```
+main.py [-h] [-c CONFIG] [-n] [-p POOL] [-l]
 
 Dump all your files from your puush account.
 
