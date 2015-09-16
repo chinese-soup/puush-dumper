@@ -10,7 +10,7 @@ Dump all your files from your puush account.
 optional arguments:
   -h, --help            show this help message and exit
   -c CONFIG, --config CONFIG
-                        Alternative path to the config file. Defualt is
+                        Alternative path to the config file. Default is
                         ./config.json
   -n, --no-download     Don't download the files, just dump the links to
                         stdout.
