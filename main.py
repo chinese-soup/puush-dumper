@@ -47,7 +47,7 @@ class ConfigParser(object):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Dump all your files from your puush account.")
-	parser.add_argument("-c", "--config", help="Alternative path to the config file. Defualt is ./config.json")
+	parser.add_argument("-c", "--config", help="Alternative path to the config file. Default is ./config.json")
 	parser.add_argument("-n", "--no-download", help="Don't download the files, just dump the links to stdout.", action="store_true")
 	parser.add_argument("-p", "--pool", help="Change the pool (aka the puush folder) to dump. Optional, as it defaults to your selected default one on puush.me.")
 	parser.add_argument("-l", "--list-pools", help="Dump the list of your pools. (aka the puush folder, e.g. Private/Public/Gallery/Custom/...)", action="store_true")
