@@ -22,6 +22,28 @@ except:
 	print "The \"BeautifulSoup\" library is missing. Please install it and try again."
 	sys.exit(1)
 
+class ConfigParser(object):
+	"""ConfigParser class"""
+	def __init__(self, args):		
+		self.config_filename = "config.json" 
+		if args.config:
+			self.config_filename = args.config
+		try:
+			self.config_data = json.load(open(self.config_filename))
+		except Exception as ex:					
+			print "Config file could not be loaded. Please check if the path to the config file is correct and the file itself is a valid JSON.\nSee config.json.example for an example of a working config file."
+
+	def config_parse(self):
+		self.login_info = {"email": "", "password": "", "login": "Login+%E2%86%92"}
+
+		if self.config_data is not []:
+			self.login_info["email"] = self.config_data["email"]
+			self.login_info["password"] = self.config_data["password"]
+		else: 
+			print "Config file could not be read properly. Please check if the path to the config file is correct and the file itself is fine.\nSee config.json.example for an example of a working config file."
+			sys.exit(1)
+		return self.login_info
+		
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Dump all your files from your puush account.")
@@ -31,27 +53,10 @@ if __name__ == "__main__":
 	parser.add_argument("-l", "--list-pools", help="Dump the list of your pools. (aka the puush folder, e.g. Private/Public/Gallery/Custom/...)", action="store_true")
 
 	args = parser.parse_args()
-	config_filename = "config.json" 
+
+	cp = ConfigParser(args)
+	login_info = cp.config_parse()
 	
-
-	if args.config:
-		config_filename = args.config
-	try:
-		config_data = json.load(open(config_filename))
-	except Exception as ee:
-		print "Config file could not be read properly. Please check if the path to the config file is correct and the file itself is fine.\nSee config.json.example for an example of a working config file."
-		print ee
-
-	
-	login_info = {"email": "", "password": "", "login": "Login+%E2%86%92"}
-
-	if config_data is not []:
-		login_info["email"] = config_data["email"]
-		login_info["password"] = config_data["password"]
-	else: 
-		print "Config file could not be read properly. Please check if the path to the config file is correct and the file itself is fine.\nSee config.json.example for an example of a working config file."
-		sys.exit(1)
-
 	session_s = requests.Session()
 	
 	response_s = session_s.post("http://puush.me/login/go", data=login_info, allow_redirects=False) # don't redirect, we are gonna do another request ourselves, anyway
@@ -90,8 +95,6 @@ if __name__ == "__main__":
 	paramss = {"page": 1}
 	
 	while(True):
-		#print "Beginning of the loop: page is currently:", paramss["page"]
-
 		page = session_s.get(base_url, params=paramss)
 		page_text = page.text
 		soup = BeautifulSoup(page_text)
@@ -99,7 +102,6 @@ if __name__ == "__main__":
 		file_links = soup.findAll("a", attrs={"onclick": re.compile("puush_hist_select.*")})
 		for link in file_links:
 			print link["href"]
-
 
 		next_page = soup.find("a", text="&raquo;", attrs={ "class": "noborder"}) # inside of the <a> tag for “next page”
 		
@@ -111,10 +113,6 @@ if __name__ == "__main__":
 		else:
 			print "No next page link found, we've reached the end. Probably. Who knows. This code's p bad."
 			break
-
-
-	else:
-		print "No next page link found, we've reached the end. Probably. Who knows. This code's p bad."
 
 	if(args.no_download == True):
 		pass
