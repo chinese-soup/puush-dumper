@@ -3,6 +3,7 @@
 # Made and tested on Python 2.7.8
 # Tested on CYGWIN_NT-6.1 unko 1.7.33-2(0.280/5/3) 2014-11-13 15:47 x86_64 Cygwin
 # Usage: ./main.py --help
+# TODO: cleanup, methods, classes
 
 import os, sys, json, argparse, re
 
@@ -86,8 +87,34 @@ if __name__ == "__main__":
 		print "Exiting."
 		sys.exit(0)
 
-	pagination_div = soup.find(id="pagination")
-	print pagination_div
+	paramss = {"page": 1}
+	
+	while(True):
+		#print "Beginning of the loop: page is currently:", paramss["page"]
+
+		page = session_s.get(base_url, params=paramss)
+		page_text = page.text
+		soup = BeautifulSoup(page_text)
+		
+		file_links = soup.findAll("a", attrs={"onclick": re.compile("puush_hist_select.*")})
+		for link in file_links:
+			print link["href"]
+
+
+		next_page = soup.find("a", text="&raquo;", attrs={ "class": "noborder"}) # inside of the <a> tag for “next page”
+		
+		if(next_page is not None):
+			next_page_a = next_page.parent # the next page <a> tag
+			next_page_number = re.sub(r"\?page=([0-9]+)", r"\1", next_page_a["href"])
+			paramss["page"] = next_page_number
+
+		else:
+			print "No next page link found, we've reached the end. Probably. Who knows. This code's p bad."
+			break
+
+
+	else:
+		print "No next page link found, we've reached the end. Probably. Who knows. This code's p bad."
 
 	if(args.no_download == True):
 		pass
