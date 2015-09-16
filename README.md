@@ -3,6 +3,17 @@
 ## Usage
 
 ```
+pip2 install BeautifulSoup requests
+```
+
+```
+cp config.example.json config.json
+```
+
+Edit the config.json file accordingly using your favorite text editor.
+
+
+```
 main.py [-h] [-c CONFIG] [-n] [-p POOL] [-l]
 
 Dump all your files from your puush account.
@@ -20,3 +31,5 @@ optional arguments:
   -l, --list-pools      Dump the list of your pools. (aka the puush folder,
                         e.g. Private/Public/Gallery/Custom/...)
 ```
+
+
