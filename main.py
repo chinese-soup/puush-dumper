@@ -22,6 +22,85 @@ except:
 	print "The \"BeautifulSoup\" library is missing. Please install it and try again."
 	sys.exit(1)
 
+class PuushDumper(object):
+	"""docstring for PuushDumper"""
+	def __init__(self):
+		#parser = Arguments(description="Dump all your files from your puush account.")
+		#args = parser.parse()
+
+		args = Arguments(description="Dump all your files from your puush account.").parse()
+
+		cp = ConfigParser(args)
+		login_info = cp.config_parse()
+		
+		session_s = requests.Session()
+		
+		response_s = session_s.post("http://puush.me/login/go", data=login_info, allow_redirects=False) # don't redirect, we are gonna do another request ourselves, anyway
+		if(response_s.status_code != 302):
+			print "Error while logging in. Check your credentials."
+			sys.exit(1)
+		
+		base_url = "http://puush.me/account?list"
+
+		main_page = session_s.get(base_url)
+		main_page_text = main_page.text
+		soup = BeautifulSoup(main_page_text)
+		
+		# Pool list #
+		if(args.list_pools == True):
+			print "Based on the arguments given, you chose to list pools only."
+
+			puush_pools_div = soup.findAll("div",attrs={"id":"puush_pools"}) # this should always return just one, so fuck for
+			puush_pools_links = puush_pools_div[0].findAll("a")
+			
+			print "Listing pools:"
+			for i in puush_pools_links:
+				title = i["title"]
+				href = re.sub(r"\/account\/\?pool=([0-9]+)", r"\1", i["href"]) # /account/?pool=number ==> number
+				print "ID: {0} | Name: {1}".format(href, title)
+			
+			print "To choose a pool to dump use the \"--pool <ID>\" argument."
+			print "Exiting."
+			sys.exit(0)
+
+		if(args.pool is not None):
+			paramss = {"page": 1, "pool": args.pool}
+
+		else:
+			paramss = {"page": 1}
+		
+		while(True):
+			print "Pool", paramss
+			page = session_s.get(base_url, params=paramss)
+			page_text = page.text
+			soup = BeautifulSoup(page_text)
+			
+			file_links = soup.findAll("a", attrs={"onclick": re.compile("puush_hist_select.*")})
+			for link in file_links:
+				if(args.no_download == True):
+					print link["href"]
+
+			next_page = soup.find("a", text="&raquo;", attrs={ "class": "noborder"}) # inside of the <a> tag for “next page”
+			
+			if(next_page is not None):
+				next_page_a = next_page.parent # the next page <a> tag
+				next_page_number = re.sub(r"\?page=([0-9]+)", r"\1", next_page_a["href"])
+				paramss["page"] = next_page_number
+
+			else:
+				print "No next page link found, we've reached the end. Probably. Who knows. This code's p bad."
+				break
+
+		if(args.no_download == True):
+			pass
+
+class Downloader(object):
+	"""docstring for Downloader"""
+	def __init__(self, arg):
+		super(Downloader, self).__init__()
+		self.arg = arg
+		
+
 class ConfigParser(object):
 	"""ConfigParser class"""
 	def __init__(self, args):		
@@ -57,69 +136,5 @@ class Arguments(argparse.ArgumentParser):
 	def parse(self):
 		return self.parse_args()
 
-
 if __name__ == "__main__":
-	parser = Arguments(description="Dump all your files from your puush account.")
-	args = parser.parse()
-	print args
-
-	cp = ConfigParser(args)
-	login_info = cp.config_parse()
-	
-	session_s = requests.Session()
-	
-	response_s = session_s.post("http://puush.me/login/go", data=login_info, allow_redirects=False) # don't redirect, we are gonna do another request ourselves, anyway
-	if(response_s.status_code != 302):
-		print "Error while logging in. Check your credentials."
-		sys.exit(1)
-	
-	base_url = "http://puush.me/account?list"
-
-	main_page = session_s.get(base_url)
-	main_page_text = main_page.text
-	soup = BeautifulSoup(main_page_text)
-	
-	# Pool list #
-	if(args.list_pools == True):
-		print "Based on the arguments given, you chose to list pools only."
-
-		puush_pools_div = soup.findAll("div",attrs={"id":"puush_pools"}) # this should always return just one, so fuck for
-		puush_pools_links = puush_pools_div[0].findAll("a")
-		
-		print "Listing pools:"
-		for i in puush_pools_links:
-			title = i["title"]
-			href = re.sub(r"\/account\/\?pool=([0-9]+)", r"\1", i["href"]) # /account/?pool=number ==> number
-			print "Content", i.content
-			print "ID: {0} | Name: {1}".format(href, title)
-		
-		print "To choose a pool to dump use the \"--pool <ID>\" argument."
-		print "Exiting."
-		sys.exit(0)
-
-
-	paramss = {"page": 1}
-	
-	while(True):
-		page = session_s.get(base_url, params=paramss)
-		page_text = page.text
-		soup = BeautifulSoup(page_text)
-		
-		file_links = soup.findAll("a", attrs={"onclick": re.compile("puush_hist_select.*")})
-		for link in file_links:
-			if(args.no_download == True):
-				print link["href"]
-
-		next_page = soup.find("a", text="&raquo;", attrs={ "class": "noborder"}) # inside of the <a> tag for “next page”
-		
-		if(next_page is not None):
-			next_page_a = next_page.parent # the next page <a> tag
-			next_page_number = re.sub(r"\?page=([0-9]+)", r"\1", next_page_a["href"])
-			paramss["page"] = next_page_number
-
-		else:
-			print "No next page link found, we've reached the end. Probably. Who knows. This code's p bad."
-			break
-
-	if(args.no_download == True):
-		pass
+	PuushDumper()
