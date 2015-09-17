@@ -44,15 +44,24 @@ class ConfigParser(object):
 			sys.exit(1)
 		return self.login_info
 		
+class Arguments(argparse.ArgumentParser):
+	"""docstring for Arguments"""
+	def __init__(self, *args, **kwargs):
+		argparse.ArgumentParser.__init__(self, *args, **kwargs)
+		print "args, kwargs: ", args, kwargs
+		self.add_argument("-c", "--config", help="Alternative path to the config file. Default is ./config.json")
+		self.add_argument("-n", "--no-download", help="Don't download the files, just dump the links to a text file.", action="store_true")
+		self.add_argument("-f", "--text-output", help="Provide a filename to dump the links to.", action="store_true")
+		self.add_argument("-p", "--pool", help="Change the pool (aka the puush folder) to dump. Optional, as it defaults to your selected default one on puush.me.")
+		self.add_argument("-l", "--list-pools", help="Dump the list of your pools. (aka the puush folder, e.g. Private/Public/Gallery/Custom/...)", action="store_true")
+	def parse(self):
+		return self.parse_args()
+
 
 if __name__ == "__main__":
-	parser = argparse.ArgumentParser(description="Dump all your files from your puush account.")
-	parser.add_argument("-c", "--config", help="Alternative path to the config file. Default is ./config.json")
-	parser.add_argument("-n", "--no-download", help="Don't download the files, just dump the links to stdout.", action="store_true")
-	parser.add_argument("-p", "--pool", help="Change the pool (aka the puush folder) to dump. Optional, as it defaults to your selected default one on puush.me.")
-	parser.add_argument("-l", "--list-pools", help="Dump the list of your pools. (aka the puush folder, e.g. Private/Public/Gallery/Custom/...)", action="store_true")
-
-	args = parser.parse_args()
+	parser = Arguments(description="Dump all your files from your puush account.")
+	args = parser.parse()
+	print args
 
 	cp = ConfigParser(args)
 	login_info = cp.config_parse()
@@ -81,6 +90,7 @@ if __name__ == "__main__":
 		for i in puush_pools_links:
 			title = i["title"]
 			href = re.sub(r"\/account\/\?pool=([0-9]+)", r"\1", i["href"]) # /account/?pool=number ==> number
+			print "Content", i.content
 			print "ID: {0} | Name: {1}".format(href, title)
 		
 		print "To choose a pool to dump use the \"--pool <ID>\" argument."
