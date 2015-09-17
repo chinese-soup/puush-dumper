@@ -29,16 +29,10 @@ class PuushDumper(object):
 		#args = parser.parse()
 
 		args = Arguments(description="Dump all your files from your puush account.").parse()
-
 		cp = ConfigParser(args)
 		login_info = cp.config_parse()
 		
-		session_s = requests.Session()
-		
-		response_s = session_s.post("http://puush.me/login/go", data=login_info, allow_redirects=False) # don't redirect, we are gonna do another request ourselves, anyway
-		if(response_s.status_code != 302):
-			print "Error while logging in. Check your credentials."
-			sys.exit(1)
+		self.session_s = requests.Session()
 		
 		base_url = "http://puush.me/account?list"
 
@@ -48,20 +42,7 @@ class PuushDumper(object):
 		
 		# Pool list #
 		if(args.list_pools == True):
-			print "Based on the arguments given, you chose to list pools only."
-
-			puush_pools_div = soup.findAll("div",attrs={"id":"puush_pools"}) # this should always return just one, so fuck for
-			puush_pools_links = puush_pools_div[0].findAll("a")
-			
-			print "Listing pools:"
-			for i in puush_pools_links:
-				title = i["title"]
-				href = re.sub(r"\/account\/\?pool=([0-9]+)", r"\1", i["href"]) # /account/?pool=number ==> number
-				print "ID: {0} | Name: {1}".format(href, title)
-			
-			print "To choose a pool to dump use the \"--pool <ID>\" argument."
-			print "Exiting."
-			sys.exit(0)
+			self.list_pools()
 
 		if(args.pool is not None):
 			paramss = {"page": 1, "pool": args.pool}
@@ -93,6 +74,29 @@ class PuushDumper(object):
 
 		if(args.no_download == True):
 			pass
+
+	def login(self):
+		response_s = self.session_s.post("http://puush.me/login/go", data=login_info, allow_redirects=False) # don't redirect after loggining in
+		if(response_s.status_code != 302):
+			print "Error while logging in. Check your credentials."
+			sys.exit(1)
+		
+
+
+	def list_pools(self):
+		puush_pools_div = soup.findAll("div",attrs={"id":"puush_pools"}) # this should always return just one, so fuck for
+		puush_pools_links = puush_pools_div[0].findAll("a")
+		
+		print "Listing pools:"
+		for i in puush_pools_links:
+			title = i["title"]
+			href = re.sub(r"\/account\/\?pool=([0-9]+)", r"\1", i["href"]) # /account/?pool=number ==> number
+			print "ID: {0} | Name: {1}".format(href, title)
+		
+		print "To choose a pool to dump use the \"--pool <ID>\" argument."
+		print "Exiting."
+
+		sys.exit(0)
 
 class Downloader(object):
 	"""docstring for Downloader"""
