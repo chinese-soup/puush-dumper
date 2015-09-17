@@ -31,8 +31,9 @@ class PuushDumper(object):
 		args = Arguments(description="Dump all your files from your puush account.").parse()
 		cp = ConfigParser(args)
 		login_info = cp.config_parse()
-		
 		self.session_s = requests.Session()
+
+		self.login()
 		
 		base_url = "http://puush.me/account?list"
 
@@ -40,7 +41,6 @@ class PuushDumper(object):
 		main_page_text = main_page.text
 		soup = BeautifulSoup(main_page_text)
 		
-		# Pool list #
 		if(args.list_pools == True):
 			self.list_pools()
 
