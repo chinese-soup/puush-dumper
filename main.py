@@ -28,10 +28,12 @@ class PuushDumper(object):
 		args = Arguments(description="Dump all your files from your puush account.").parse()
 		cp = ConfigParser(args)
 		login_info = cp.config_parse()
+
 		self.session_s = requests.Session()
 		self.login(login_info)
 		self.base_url = "http://puush.me/account?list"
-		self.filename = "puush.txt" or args.text_output
+		self.filename = args.text_output or "puush.txt"
+		self.all_links = []
 
 		if args.list_pools: 
 			self.list_pools()
@@ -48,9 +50,7 @@ class PuushDumper(object):
 			file_links = soup.findAll("a", attrs={"onclick": re.compile("puush_hist_select.*")}) # find all the file links on the page
 			for link in file_links:
 				if args.no_download:
-					if args.text_output:
-						print "Hi, filename:", self.filename
-					print link["href"]
+					self.all_links.append(link["href"])
 
 			next_page_btn = soup.find("a", text="&raquo;", attrs={ "class": "noborder"}) # inside of the <a> tag for “next page”
 			
@@ -61,7 +61,24 @@ class PuushDumper(object):
 
 			else:
 				print "No next page link found, we've probably reached the end. This code's p bad, so who knows."
+				print "End of scraping."
 				break
+		# done #
+
+		if args.no_download:
+			if args.text_output:
+				#if os.path.exists(os.path.join(os.path.dirname(__file__), self.filename)):
+				#	print "The selected filename '{0}' already exists. Are you sure you want to overwrite it? [Y/n]: "
+				#	choice = raw_input()
+
+				print "Opening file {0} for writing.".format(self.filename)
+				filestream = codecs.open(self.filename, "w", "utf-8")
+				for link in self.all_links:
+					filestream.write(link + "\n")
+				filestream.close()
+			else:
+				for link in self.all_links:
+					print link
 
 	def login(self, login_info):
 		response_s = self.session_s.post("http://puush.me/login/go", data=login_info, allow_redirects=False) # don't redirect after loggining in
