@@ -87,8 +87,7 @@ class PuushDumper(object):
 				print "---------------- End: 	Cut here ----------------"
 		else:
 			print "Starting downloader."
-			downloader = Downloader("rofl")
-			downloader.download_file(self.all_links[5])
+			downloader = Downloader(self.all_links)
 
 		print "Exiting."
 
@@ -125,19 +124,48 @@ class PuushDumper(object):
 
 class Downloader(object):
 	"""Downloader"""
-	def __init__(self, arg):
+	def __init__(self, links):
 		super(Downloader, self).__init__()
-		self.arg = arg
+		self.all_links = links
+		self.number_of_files = len(self.all_links)
 
-	def download_file(self, url):
-		local_filename = url.split('/')[-1]
+		for i in range(0, len(self.all_links)):
+			self.download_file(links[i], i+1)
+
+	def download_file(self, url, no): # rofl?
+		local_filename = "puush_files/" + url.split('/')[-1]
 
 		r = requests.get(url, stream=True)
-		print "Content-length je" + r.headers["content-length"]
+		length = -1
+
+		if("content-length" in r.headers):
+			if(r.headers["content-length"] != 0 or r.headers["content-length"] is not None):
+				length = int(r.headers["content-length"]) or "-1"
+		else:
+			length = -1
 
 		with open(local_filename, "wb") as f:
+			y = 0
+			perc = 0
+			old_perc = -1
 			for chunk in r.iter_content(chunk_size=1024): 
 				if chunk: 
+					try:
+						y += len(chunk)
+						perc = y/(length/100)
+						if perc != old_perc and length != -1:
+							print "Downloading file {0} out of {1}: {2}% ({3}/{4} kB)".format(no, self.number_of_files, y/(length/100), y*0.001, length*0.001)
+							old_perc = perc
+						elif length == -1:
+							print "Downloading file {0} out of {1}: {2}% ({3}/{4} kB)".format(no, self.number_of_files, "??%", y*0.000001, "unknown")
+							old_perc = 0
+							perc = 0
+
+					except ZeroDivisionError as zeroexp:
+						print "Hello darkness my old friend."
+					except Exception as exp:
+						print "Shit happened while printing out this shitty progress info.\n{0}".format(exp)
+
 					f.write(chunk)
 					f.flush()
 		return local_filename
