@@ -42,44 +42,64 @@ class PuushDumper(object):
 		print "PARAMSS: ", paramss
 	
 		while(True):
-			print "Pool", paramss
+			print "Start loading page #{0}".format(paramss["page"])
 			page = self.session_s.get(self.base_url, params=paramss)
 			page_text = page.text
 			soup = BeautifulSoup(page_text)
 			
 			file_links = soup.findAll("a", attrs={"onclick": re.compile("puush_hist_select.*")}) # find all the file links on the page
 			for link in file_links:
-				if args.no_download:
-					self.all_links.append(link["href"])
+				self.all_links.append(link["href"])
 
 			next_page_btn = soup.find("a", text="&raquo;", attrs={ "class": "noborder"}) # inside of the <a> tag for “next page”
 			
 			if next_page_btn is not None:
 				next_page_a = next_page_btn.parent # the next page <a> tag
 				next_page_number = re.sub(r"\?page=([0-9]+)", r"\1", next_page_a["href"])
+				print "End of loading page #{0}".format(paramss["page"])
 				paramss["page"] = next_page_number
 
 			else:
-				print "No next page link found, we've probably reached the end. This code's p bad, so who knows."
-				print "End of scraping."
+				print "No next page link found, we've probably reached the end. This code's p bad, so who knows if we actually did."
+				print "End of scraping.\n----------------"
 				break
+
 		# done #
 
 		if args.no_download:
 			if args.text_output:
 				#if os.path.exists(os.path.join(os.path.dirname(__file__), self.filename)):
 				#	print "The selected filename '{0}' already exists. Are you sure you want to overwrite it? [Y/n]: "
-				#	choice = raw_input()
+				#	choice = raw_input() or "y"
 
-				print "Opening file {0} for writing.".format(self.filename)
-				filestream = codecs.open(self.filename, "w", "utf-8")
-				for link in self.all_links:
-					filestream.write(link + "\n")
-				filestream.close()
+				#if choice.lower() != "n":
+
+				try:
+					print "Starting text output."
+					self.dump_links()
+					print "Done. {0} lines sucessfully written into '{1}'.".format(len(self.all_links), self.filename)
+				except Exception as exp:
+					print "Shit happened: {0}".format(exp)
 			else:
+				print "---------------- Start: 	Cut here ----------------"
 				for link in self.all_links:
 					print link
+				print "---------------- End: 	Cut here ----------------"
+		else:
+			print "Starting downloader."
+			downloader = Downloader("rofl")
+			downloader.download_file(self.all_links[5])
 
+		print "Exiting."
+
+	def dump_links(self):
+		print "Opening file '{0}' for writing.".format(self.filename)
+	
+		filestream = codecs.open(self.filename, "w", "utf-8")
+		for link in self.all_links:
+			filestream.write(link + "\n")
+		filestream.close()
+	
 	def login(self, login_info):
 		response_s = self.session_s.post("http://puush.me/login/go", data=login_info, allow_redirects=False) # don't redirect after loggining in
 		if(response_s.status_code != 302):
@@ -108,7 +128,20 @@ class Downloader(object):
 	def __init__(self, arg):
 		super(Downloader, self).__init__()
 		self.arg = arg
-		
+
+	def download_file(self, url):
+		local_filename = url.split('/')[-1]
+
+		r = requests.get(url, stream=True)
+		print "Content-length je" + r.headers["content-length"]
+
+		with open(local_filename, "wb") as f:
+			for chunk in r.iter_content(chunk_size=1024): 
+				if chunk: 
+					f.write(chunk)
+					f.flush()
+		return local_filename
+	
 
 class ConfigParser(object):
 	"""ConfigParser class"""
@@ -137,6 +170,7 @@ class Arguments(argparse.ArgumentParser):
 		argparse.ArgumentParser.__init__(self, *args, **kwargs)
 		print "args, kwargs: ", args, kwargs
 		self.add_argument("-c", "--config", help="Alternative path to the config file. Default is ./config.json")
+		self.add_argument("-o", "--output-directory", help="Override's config output folder to download to.")
 		self.add_argument("-n", "--no-download", help="Don't download the files, just dump the links. Defaults to stdout, use with -f to .", action="store_true")
 		self.add_argument("-f", "--text-output", help="Provide a filename to dump the links to.")
 		self.add_argument("-p", "--pool", help="Change the pool (aka the puush folder) to dump. Optional, as it defaults to your selected default one on puush.me.")
